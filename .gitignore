@@ -1,0 +1,12 @@
+/.venv
+/node_modules
+__pycache__/
+*.pyc
+.dist/
+.build/
+.coverage*
+.pytest_cache/
+.env
+infra/db_data/
+.idea/
+.vscode/
