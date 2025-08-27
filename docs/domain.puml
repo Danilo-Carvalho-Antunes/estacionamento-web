@@ -1,0 +1,86 @@
+@startuml
+hide circle
+skinparam classAttributeIconSize 0
+
+class Contractor {
+  +id: int
+  +name: string
+  +revenue_share_percent: decimal
+  +accrued_value: decimal
+}
+
+class ParkingLot {
+  +id: int
+  +contractor_id: int
+  +name: string
+  +capacity: int
+  +opens_at: time
+  +closes_at: time
+}
+
+class PricingProfile {
+  +id: int
+  +lot_id: int
+  +fraction_value: decimal
+  +hourly_discount_percent: decimal
+  +daily_value: decimal
+  +nightly_discount_percent: decimal
+  +monthly_value: decimal
+}
+
+class Vehicle {
+  +id: int
+  +plate: string
+  +brand: string
+  +model: string
+}
+
+class WaitlistItem {
+  +id: int
+  +lot_id: int
+  +vehicle_id: int
+  +enqueued_at: datetime(utc)
+  +position: int
+  +status: enum
+}
+
+class LotAssociate {
+  +id: int
+  +lot_id: int
+  +vehicle_id: int
+}
+
+class Event {
+  +id: int
+  +lot_id: int
+  +name: string
+  +date: date
+  +opens_at: time
+  +closes_at: time
+  +price: decimal
+}
+
+class Access {
+  +id: int
+  +lot_id: int
+  +vehicle_id: int
+  +start_at: datetime(utc)
+  +end_at: datetime(utc)
+  +type: enum
+  +charged_value: decimal
+  +status: enum
+  +event_id: int?
+}
+
+Contractor "1" -- "*" ParkingLot
+ParkingLot "1" -- "1" PricingProfile
+ParkingLot "1" -- "*" Event
+ParkingLot "1" -- "*" Access
+ParkingLot "1" -- "*" LotAssociate
+ParkingLot "1" -- "*" WaitlistItem
+Vehicle "1" -- "*" Access
+Vehicle "1" -- "*" LotAssociate
+Vehicle "1" -- "*" WaitlistItem
+Access "0..1" -- "1" Event
+
+@enduml

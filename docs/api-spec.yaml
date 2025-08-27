@@ -1,0 +1,453 @@
+openapi: 3.0.3
+info:
+  title: Estacionamento Web API (MVP)
+  version: 0.1.0
+  description: API para gestão de estacionamentos (Etapas 3–6). Documentada na Etapa 1.
+servers:
+  - url: http://localhost:8000
+    description: Local dev
+
+paths:
+  /health:
+    get:
+      summary: Healthcheck
+      responses:
+        '200': { description: OK }
+
+  /lots:
+    get:
+      summary: Listar estacionamentos
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ParkingLot' }
+    post:
+      summary: Criar estacionamento
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ParkingLotCreate' }
+      responses:
+        '201': { description: Criado, retorna ParkingLot }
+        '422': { description: Validação }
+
+  /lots/{id}:
+    get:
+      summary: Obter estacionamento
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ParkingLot' } } } }
+        '404': { description: Não encontrado }
+    put:
+      summary: Atualizar estacionamento
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ParkingLotUpdate' }
+      responses:
+        '200': { description: OK }
+        '422': { description: Validação }
+        '404': { description: Não encontrado }
+    delete:
+      summary: Remover estacionamento
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Removido }
+        '404': { description: Não encontrado }
+
+  /lots/{id}/pricing:
+    get:
+      summary: Obter perfil de preços do lote
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/PricingProfile' } } } }
+        '404': { description: Não encontrado }
+    put:
+      summary: Atualizar perfil de preços
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PricingProfileUpdate' }
+      responses:
+        '200': { description: OK }
+        '422': { description: Validação }
+        '404': { description: Não encontrado }
+
+  /vehicles:
+    get:
+      summary: Listar veículos
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Vehicle' }
+    post:
+      summary: Criar veículo
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VehicleCreate' }
+      responses:
+        '201': { description: Criado }
+        '422': { description: Validação }
+
+  /vehicles/{id}:
+    get:
+      summary: Obter veículo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Vehicle' } } } }
+        '404': { description: Não encontrado }
+    put:
+      summary: Atualizar veículo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VehicleUpdate' }
+      responses:
+        '200': { description: OK }
+        '422': { description: Validação }
+        '404': { description: Não encontrado }
+    delete:
+      summary: Remover veículo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Removido }
+        '404': { description: Não encontrado }
+
+  /lots/{id}/associates:
+    get:
+      summary: Listar associados (mensalistas) do lote
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+      responses:
+        '200': { description: OK }
+        '404': { description: Não encontrado }
+
+  /lots/{id}/associates/{vehicle_id}:
+    post:
+      summary: Associar veículo ao lote
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+        - in: path
+          name: vehicle_id
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Associado }
+        '404': { description: Não encontrado }
+    delete:
+      summary: Remover associação do veículo
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema: { type: integer }
+        - in: path
+          name: vehicle_id
+          required: true
+          schema: { type: integer }
+      responses:
+        '204': { description: Removido }
+        '404': { description: Não encontrado }
+
+  /lots/{id}/events:
+    get:
+      summary: Listar eventos do lote
+      parameters: [ { in: path, name: id, required: true, schema: { type: integer } } ]
+      responses:
+        '200': { description: OK }
+    post:
+      summary: Criar evento
+      parameters: [ { in: path, name: id, required: true, schema: { type: integer } } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventCreate' }
+      responses:
+        '201': { description: Criado }
+        '422': { description: Validação }
+    put:
+      summary: Atualizar evento
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EventUpdate' }
+      responses:
+        '200': { description: OK }
+        '404': { description: Não encontrado }
+    delete:
+      summary: Remover evento
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+      responses:
+        '204': { description: Removido }
+        '404': { description: Não encontrado }
+
+  /lots/{id}/access:
+    get:
+      summary: Listar acessos por placa e data
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+        - { in: query, name: plate, required: false, schema: { type: string } }
+        - { in: query, name: date, required: false, schema: { type: string, format: date } }
+      responses:
+        '200': { description: OK }
+
+  /lots/{id}/access/check-in:
+    post:
+      summary: Abertura de acesso (check-in)
+      parameters: [ { in: path, name: id, required: true, schema: { type: integer } } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CheckInRequest' }
+      responses:
+        '201': { description: Criado }
+        '202':
+          description: Fila de espera (status queued)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CheckInQueuedResponse' }
+        '409': { description: Fora de horário }
+        '422': { description: Validação }
+
+  /lots/{id}/access/check-out:
+    post:
+      summary: Fechamento de acesso (check-out)
+      parameters: [ { in: path, name: id, required: true, schema: { type: integer } } ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CheckOutRequest' }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/Access' } } } }
+        '404': { description: Acesso não encontrado }
+        '422': { description: Validação }
+
+  /lots/{id}/quote:
+    get:
+      summary: Simular valor (sem registrar acesso)
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: integer } }
+        - { in: query, name: start_at, required: true, schema: { type: string, format: date-time } }
+        - { in: query, name: end_at, required: true, schema: { type: string, format: date-time } }
+        - { in: query, name: plate, required: false, schema: { type: string } }
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/QuoteResponse' } } } }
+        '409': { description: Fora de horário }
+        '422': { description: Validação }
+
+  /reports/contractors/{id}/totals:
+    get:
+      summary: Totais do contratante
+      parameters: [ { in: path, name: id, required: true, schema: { type: integer } } ]
+      responses:
+        '200': { description: OK, content: { application/json: { schema: { $ref: '#/components/schemas/ContractorTotals' } } } }
+        '404': { description: Não encontrado }
+
+  /lots/{id}/totals:
+    get:
+      summary: Totais do lote
+      parameters: [ { in: path, name: id, required: true, schema: { type: integer } } ]
+      responses:
+        '200': { description: OK }
+
+components:
+  schemas:
+    Decimal:
+      type: string
+      pattern: "^\\d+\\.\\d{2}$"
+      example: "12.34"
+      description: Valores monetários em BRL (Real).
+
+    ParkingLot:
+      type: object
+      properties:
+        id: { type: integer }
+        contractor_id: { type: integer }
+        name: { type: string }
+        capacity: { type: integer }
+        opens_at: { type: string, format: time }
+        closes_at: { type: string, format: time }
+
+    ParkingLotCreate:
+      allOf:
+        - $ref: '#/components/schemas/ParkingLot'
+      required: [ contractor_id, name, capacity, opens_at, closes_at ]
+
+    ParkingLotUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        capacity: { type: integer }
+        opens_at: { type: string, format: time }
+        closes_at: { type: string, format: time }
+
+    PricingProfile:
+      type: object
+      properties:
+        id: { type: integer }
+        lot_id: { type: integer }
+        fraction_value: { $ref: '#/components/schemas/Decimal' }
+        hourly_discount_percent: { $ref: '#/components/schemas/Decimal' }
+        daily_value: { $ref: '#/components/schemas/Decimal' }
+        nightly_discount_percent: { $ref: '#/components/schemas/Decimal' }
+        monthly_value: { $ref: '#/components/schemas/Decimal' }
+
+    PricingProfileUpdate:
+      allOf:
+        - $ref: '#/components/schemas/PricingProfile'
+
+    Vehicle:
+      type: object
+      properties:
+        id: { type: integer }
+        plate: { type: string }
+        brand: { type: string }
+        model: { type: string }
+
+    VehicleCreate:
+      type: object
+      required: [ plate ]
+      properties:
+        plate: { type: string }
+        brand: { type: string }
+        model: { type: string }
+
+    VehicleUpdate:
+      type: object
+      properties:
+        brand: { type: string }
+        model: { type: string }
+
+    Event:
+      type: object
+      properties:
+        id: { type: integer }
+        lot_id: { type: integer }
+        name: { type: string }
+        date: { type: string, format: date }
+        opens_at: { type: string, format: time }
+        closes_at: { type: string, format: time }
+        price: { $ref: '#/components/schemas/Decimal' }
+
+    EventCreate:
+      allOf:
+        - $ref: '#/components/schemas/Event'
+
+    EventUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        date: { type: string, format: date }
+        opens_at: { type: string, format: time }
+        closes_at: { type: string, format: time }
+        price: { $ref: '#/components/schemas/Decimal' }
+
+    Access:
+      type: object
+      properties:
+        id: { type: integer }
+        lot_id: { type: integer }
+        vehicle_id: { type: integer }
+        start_at: { type: string, format: date-time }
+        end_at: { type: string, format: date-time }
+        type: { type: string, enum: [ fraction, hourly, daily, nightly, monthly, event ] }
+        charged_value: { $ref: '#/components/schemas/Decimal' }
+        status: { type: string, enum: [ open, closed ] }
+        event_id: { type: integer, nullable: true }
+
+    CheckInRequest:
+      type: object
+      required: [ plate, start_at ]
+      properties:
+        plate: { type: string }
+        start_at: { type: string, format: date-time }
+
+    CheckOutRequest:
+      type: object
+      required: [ plate, end_at ]
+      properties:
+        plate: { type: string }
+        end_at: { type: string, format: date-time }
+
+    QuoteResponse:
+      type: object
+      properties:
+        type: { type: string, enum: [ fraction, hourly, daily, nightly, monthly, event ] }
+        value: { $ref: '#/components/schemas/Decimal' }
+
+    ContractorTotals:
+      type: object
+      properties:
+        contractor_id: { type: integer }
+        accrued_value: { $ref: '#/components/schemas/Decimal' }
+        period: { type: string }
+
+    CheckInQueuedResponse:
+      type: object
+      properties:
+        status: { type: string, enum: [ queued ] }
+        position: { type: integer, minimum: 1 }
+        enqueued_at: { type: string, format: date-time }
+      required: [ status, position, enqueued_at ]
