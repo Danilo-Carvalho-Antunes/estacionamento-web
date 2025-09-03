@@ -1,0 +1,62 @@
+# Ambientação Docker — DB (MySQL 8) e API (FastAPI)
+
+Este documento descreve, de forma objetiva, como executar localmente a API e o banco usando contêineres, e como validar que o ambiente está correto. Não inclui comandos; foque nos resultados esperados e nos arquivos envolvidos.
+
+## Objetivo
+- Subir os serviços de banco (MySQL 8) e API (FastAPI) em contêineres.
+- Tornar o banco acessível a partir do host (IDE/cliente SQL) e dos próprios contêineres.
+- Popular o banco com dados iniciais automaticamente no primeiro start.
+
+## Escopo
+- Cobre somente DB e API. O serviço Web (React) não faz parte desta ambientação.
+- A infraestrutura fica dentro do backend.
+
+## Pré‑requisitos
+- Docker (Engine/Desktop) e Docker Compose v2 (plugin integrado ao Docker atual).
+- Portas do host disponíveis: 8000 (API) e uma porta para o MySQL (por padrão 3306; recomenda‑se 3307 no host para evitar conflito local).
+
+## Estrutura de arquivos (backend)
+- `estacionamento-web-backend/docker-compose.yml` — orquestra `db` e `api` (e `web`, fora do escopo aqui).
+- `estacionamento-web-backend/.env.example` — base de variáveis; copie para `.env` antes de executar.
+- `estacionamento-web-backend/mysql/init/`
+  - `001_schema.sql` — criação do schema/tabelas.
+  - `002_seed.sql` — carga inicial de dados (idempotente quando possível).
+- `estacionamento-web-backend/Dockerfile` — imagem da API.
+- `estacionamento-web-backend/app/main.py` — FastAPI com rota de saúde `/health`.
+
+## Variáveis de ambiente relevantes (`.env`)
+- `HOST_DB_PORT` — porta do MySQL no host. Ex.: `3307` (mapeia para `3306` no contêiner).
+- `DB_URL` — URL de conexão que a API usa para acessar o MySQL do serviço `db`.
+- `APP_ENV` — ambiente da aplicação (ex.: `development`).
+
+Observação: o arquivo `.env.example` inclui valores de exemplo (incluindo `HOST_DB_PORT=3306`). Ajuste `HOST_DB_PORT` no arquivo `.env` conforme a porta livre no seu host (recomenda‑se `3307`).
+
+## Execução (visão geral)
+1. Copie `estacionamento-web-backend/.env.example` para `estacionamento-web-backend/.env` e ajuste `HOST_DB_PORT` se necessário.
+2. A partir do diretório `estacionamento-web-backend/`, orquestre os serviços `db` e `api` com Docker Compose v2.
+3. Aguarde o `healthcheck` do MySQL indicar que o serviço `db` está saudável para que a API inicie.
+
+## Validações esperadas
+- Contêineres ativos:
+  - `db` com status “healthy”.
+  - `api` em execução.
+- Mapeamentos de portas:
+  - Banco acessível no host em `127.0.0.1:HOST_DB_PORT` (ex.: `127.0.0.1:3307`).
+  - API exposta em `http://localhost:8000`.
+- Rota de saúde da API:
+  - `GET /health` retorna corpo com status “ok”.
+- Seeds aplicados (amostra de quantidades esperadas):
+  - `contractors`: 1
+  - `parking_lots`: 2
+  - `pricing_profiles`: 2
+  - `vehicles`: 10
+  - `events`: 2
+  - `accesses`: 5
+- Configuração do MySQL:
+  - `character_set_server = utf8mb4`
+  - `collation_server = utf8mb4_0900_ai_ci`
+
+## Observações
+- Aviso “`version is obsolete`” ao inspecionar o Compose pode aparecer; não impacta a execução.
+- Se a porta padrão do MySQL no host já estiver em uso, ajuste `HOST_DB_PORT` no `.env` e reinicie apenas o serviço `db`.
+- Para reinicialização completa do banco (recriar volume e reaplicar seeds), desligue a infraestrutura removendo os volumes e suba novamente o `db` antes da `api`.
