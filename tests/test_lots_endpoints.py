@@ -3,15 +3,20 @@ from datetime import time, datetime
 from decimal import Decimal
 
 import pytest
-from fastapi.testclient import TestClient
+from httpx import AsyncClient, ASGITransport
 
 # Ensure Settings() can be constructed during import by providing a dummy DB_URL
 os.environ.setdefault("DB_URL", "sqlite+pysqlite:///:memory:")
 
 from app.main import app  # noqa: E402
 
+pytestmark = pytest.mark.asyncio
 
-client = TestClient(app)
+
+@pytest.fixture(scope="module")
+async def async_client():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://testserver") as ac:
+        yield ac
 
 
 class _Lot:
@@ -71,30 +76,30 @@ def patch_repositories(monkeypatch):
     monkeypatch.setattr(lots_mod, "calculate_price", fake_calc_price)
 
 
-def test_list_lots_ok():
-    r = client.get("/v1/lots/")
+async def test_list_lots_ok(async_client):
+    r = await async_client.get("/v1/lots/")
     assert r.status_code == 200
     data = r.json()
     assert isinstance(data, list) and len(data) == 2
     assert data[0]["name"] == "Lote A"
 
 
-def test_get_lot_ok():
-    r = client.get("/v1/lots/1")
+async def test_get_lot_ok(async_client):
+    r = await async_client.get("/v1/lots/1")
     assert r.status_code == 200
     assert r.json()["id"] == 1
 
 
-def test_get_pricing_ok():
-    r = client.get("/v1/lots/1/pricing")
+async def test_get_pricing_ok(async_client):
+    r = await async_client.get("/v1/lots/1/pricing")
     assert r.status_code == 200
     body = r.json()
     assert body["name"] == "default"
     assert body["hourly_rate"] == "8.00"
 
 
-def test_quote_ok():
-    r = client.get(
+async def test_quote_ok(async_client):
+    r = await async_client.get(
         "/v1/lots/1/quote",
         params={
             "start_at": "2024-12-01T10:00:00",
